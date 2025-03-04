@@ -36,7 +36,7 @@ function localLogin(req, res, next) {
  */
 function jwt(req, res, next) {
     passport.authenticate('jwt', { session: false }, (err, data, info) => {
-        console.log('middleware/auth.js:', err, data, info)
+        // console.log('middleware/auth.js:', err, data, info)
         if (err) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,

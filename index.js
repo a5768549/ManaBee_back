@@ -9,6 +9,7 @@ import { Server } from 'socket.io'
 
 // 路由
 import routerUser from './routers/user.js'
+import routerChat from './routers/chat.js'
 
 import cors from 'cors'
 
@@ -38,6 +39,9 @@ app.use((error, req, res, next) => {
 
 // 路由
 app.use('/user', routerUser)
+app.use('/chat', routerChat)
+
+import Message from './models/message.js'
 
 // 📌 WebSocket
 io.on('connection', (socket) => {
@@ -50,18 +54,19 @@ io.on('connection', (socket) => {
     })
 
     // sendMessage
-    socket.on('sendMessage', (data) => {
-        console.log('收到訊息:', data)
-
-        // 要符合套件格式
-        // date: 日期(不含時間)
-        data.date = new Date().toDateString()
-        // timestamp: 時間(不含日期)
-        data.timestamp = new Date().toString().substring(16, 21)
-
-        io.to(data.roomId).emit('receiveMessage', data)
-        console.log(`Message sent to room ${data.roomId}:`, data)
-        // io.emit('receiveMessage', data)
+    socket.on('sendMessage', async (msg) => {
+        try {
+            // msg 內容格式：{ roomId, content, senderId }
+            const newMsg = await Message.create({
+                room: msg.roomId,
+                senderId: msg.senderId,
+                content: msg.content,
+            })
+            // 廣播訊息給該聊天室內的所有用戶
+            io.to(msg.roomId).emit('receiveMessage', newMsg)
+        } catch (error) {
+            console.error('Socket sendMessage error:', error)
+        }
     })
 
     // disconnect
